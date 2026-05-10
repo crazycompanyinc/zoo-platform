@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String   @id
+  email         String   @unique
+  name          String?
+  passwordHash  String?
+  image         String?
+  tier          String   @default("FREE")
+  tokensUsed    Int      @default(0)
+  tokensLimit   Int      @default(10000)
+  credits       Int      @default(100)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  agents        Agent[]
+  tasks         Task[]
+  conversations Conversation[]
+  activityLogs  ActivityLog[]
+}
+
+model Agent {
+  id              String   @id
+  userId          String
+  templateId      String?
+  name            String
+  title           String?
+  role            String
+  department      String
+  status          String   @default("IDLE")
+  avatarUrl       String?
+  model           String   @default("openrouter/owl-alpha")
+  systemPrompt    String?
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(2048)
+  skills          String   @default("[]")
+  tools           String   @default("[]")
+  knowledgeBase   String?
+  level           Int      @default(1)
+  xp              Int      @default(0)
+  xpToNext        Int      @default(100)
+  element         String   @default("tech")
+  rarity          String   @default("common")
+  hp              Int      @default(100)
+  maxHp           Int      @default(100)
+  energy          Int      @default(100)
+  maxEnergy       Int      @default(100)
+  attack          Int      @default(10)
+  defense         Int      @default(10)
+  speed           Int      @default(10)
+  charisma        Int      @default(10)
+  luck            Int      @default(10)
+  hunger          Int      @default(100)
+  happiness       Int      @default(80)
+  abilities       String   @default("[]")
+  completedTasks  Int      @default(0)
+  uptime          Int      @default(99)
+  lastActiveAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  personality     String   @default("{}")
+  customInstructions String?
+  user            User     @relation(fields: [userId], references: [id])
+  tasks           Task[]
+  conversations   Conversation[]
+  activityLogs    ActivityLog[]
+}
+
+model AgentTemplate {
+  id              String   @id
+  slug            String   @unique
+  name            String
+  title           String
+  role            String
+  department      String
+  description     String
+  model           String   @default("openrouter/owl-alpha")
+  systemPrompt    String
+  temperature     Float    @default(0.7)
+  maxTokens       Int      @default(2048)
+  defaultSkills   String   @default("[]")
+  defaultTools    String   @default("[]")
+  avatarUrl       String?
+  element         String   @default("tech")
+  tierRequired    String   @default("FREE")
+  monthlyCost     Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Conversation {
+  id        String   @id
+  userId    String
+  agentId   String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  messages  Message[]
+}
+
+model Message {
+  id             String   @id
+  conversationId String
+  role           String
+  content        String
+  tokensIn       Int      @default(0)
+  tokensOut      Int      @default(0)
+  metadata       String?
+  createdAt      DateTime @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+}
+
+model Task {
+  id          String   @id
+  userId      String
+  agentId     String?
+  title       String
+  description String?
+  status      String   @default("BACKLOG")
+  priority    String   @default("MEDIUM")
+  tags        String   @default("[]")
+  kanbanColumn String?  @default("backlog")
+  kanbanPosition Int?   @default(0)
+  dueAt       DateTime?
+  completedAt DateTime?
+  result      String?
+  outputUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+  agent       Agent?   @relation(fields: [agentId], references: [id])
+}
+
+model ActivityLog {
+  id        String   @id
+  userId    String
+  agentId   String?
+  type      String
+  message   String
+  metadata  String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  agent     Agent?   @relation(fields: [agentId], references: [id])
+}
